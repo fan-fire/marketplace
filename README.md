@@ -111,6 +111,8 @@ struct Listing {
     uint256 price; //Price of the listed item
     address paymentToken; //Address of the ERC20 contract that will be used to pay for the listing 
     NFTType nftType; //Type of the listed item. Either ERC721 or ERC1155 with or without ERC2981
+    uint256 reservedUntil; //Timestamp when the listing will be reserved
+    address reservedFor; //Address of the buyer who reserved the listing
 }
 ```
 
