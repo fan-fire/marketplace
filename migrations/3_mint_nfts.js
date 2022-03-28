@@ -2,6 +2,7 @@ const ERC721Mock = artifacts.require('ERC721Mock');
 const ERC721WithERC2981Mock = artifacts.require('ERC721WithERC2981Mock');
 const ERC1155Mock = artifacts.require('ERC1155Mock');
 const ERC1155WithERC2981Mock = artifacts.require('ERC1155WithERC2981Mock');
+const ERC20Mock = artifacts.require('ERC20Mock');
 
 const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -9,12 +10,12 @@ const sleep = (ms) => {
 
 module.exports = async (deployer, network, accounts) => {
   // if (network !== 'development') {
-  //   await sleep(60000);
+  //   await sleep(20000);
   // }
   // // await sleep(60000);
-  // // await deployer.deploy(ERC20Mock);
-  // // let m = await ERC20Mock.deployed();
-  // // console.log(m.address);
+  await deployer.deploy(ERC20Mock);
+  let m = await ERC20Mock.deployed();
+  console.log(m.address);
   // await deployer.deploy(ERC721Mock);
   // if (network !== 'development') {
   //   await sleep(60000);

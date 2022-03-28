@@ -19,9 +19,31 @@
  */
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
+const NonceTrackerSubprovider = require("web3-provider-engine/subproviders/nonce-tracker")
+
 //
 // const fs = require('fs');
-const mnemonic = 'satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi';
+const mnemonic = process.env.MNEUMONIC;
+// const https = require('https')
+
+// let POLYGON_GAS_PRICES_URL = 'https://gasstation-mainnet.matic.network/v2';
+// let gasPrice;
+
+// https.get(POLYGON_GAS_PRICES_URL, res => {
+//   let data = '';
+//   res.on('data', chunk => {
+//     data += chunk;
+//   });
+//   res.on('end', () => {
+//     data = JSON.parse(data);
+//     gasPrice=data;
+//     console.log(data);
+//   })
+// }).on('error', err => {
+//   console.log(err.message);
+// })
+
+// console.log(`gasPrice: ${gasPrice}`);
 
 module.exports = {
   /**
@@ -57,14 +79,28 @@ module.exports = {
     // },
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
+    // curl https://gasstation-mainnet.matic.network/v2
+    polygon: {
+      // provider: () => new HDWalletProvider(mnemonic, process.env.POLYGON_NODE),
+      provider: function () {
+        var wallet = new HDWalletProvider(mnemonic, process.env.POLYGON_NODE)
+        var nonceTracker = new NonceTrackerSubprovider()
+        wallet.engine._providers.unshift(nonceTracker)
+        nonceTracker.setEngine(wallet.engine)
+        return wallet
+      },
+      network_id: 137, // Ropsten's id
+      gasPrice: 40 * 10 ** 9,
+      gas: 4066000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2, // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
+    },
     mumbai: {
-      provider: () =>
-        new HDWalletProvider(
-          mnemonic,
-          process.env.MUMBAI_NODE
-        ),
+      provider: () => new HDWalletProvider(mnemonic, process.env.MUMBAI_NODE),
       network_id: 80001, // Ropsten's id
       // gas: 5500000,        // Ropsten has a lower block limit than mainnet
+      //      4066000
       confirmations: 2, // # of confs to wait between deployments. (default: 0)
       timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
       skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
@@ -81,11 +117,11 @@ module.exports = {
   mocha: {
     reporter: 'eth-gas-reporter',
     reporterOptions: {
-      currency:"ZAR",
+      currency: 'ZAR',
       noColors: true,
       coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-      token: "MATIC",
-      gasPriceApi: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
+      token: 'MATIC',
+      gasPriceApi: 'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice',
       excludeContracts: [
         'EmptyContractMock',
         'ERC1155Mock',
@@ -97,7 +133,7 @@ module.exports = {
         'ERC721WithoutOwnerMock',
         'Migrations',
         'MockThatOnlySupports165',
-        'MarketplaceMock'
+        'MarketplaceMock',
       ],
     },
   },
