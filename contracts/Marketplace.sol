@@ -330,6 +330,9 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
         Listing memory listing = getListing(nftAddress, tokenId);
 
+        // check reserving
+        require(block.timestamp >= listing.reservedUntil, 'NFT reserved');
+
         require(listing.seller == msg.sender, 'Only seller of NFT can unlist');
         assert(_unlist(nftAddress, tokenId));
     }

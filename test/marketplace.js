@@ -39,12 +39,13 @@ const { eventEmitted } = require('truffle-assertions');
 contract('Marketplace', async (accounts) => {
   const addrOwner = accounts[0];
   const addrNotOwner = accounts[1];
-
+  
   const addrSeller1 = accounts[2];
   const addrBuyer1 = accounts[3];
-
+  
   const addrSeller2 = accounts[4];
   const addrBuyer2 = accounts[5];
+  const addrReserver = accounts[6];
 
   // contracts
   let marketplace;
@@ -739,5 +740,35 @@ contract('Marketplace', async (accounts) => {
       listingStructToObject(listingAfterUnlist),
       'listing should not be unlisted'
     );
+  });
+
+
+  it.only("can't unlist if token is reserved", async () => {
+    let nftAddress = await erc721.address;
+    price = web3.utils.toWei('1', 'ether');
+    paymentToken = erc20.address;
+    tokenId = 1;
+
+    await erc721.setApprovalForAll(marketplace.address, true, {
+      from: addrSeller1,
+    });
+
+    let { listing, lstPtr } = await listItem(
+      marketplace,
+      nftAddress,
+      tokenId,
+      price,
+      paymentToken,
+      addrSeller1
+    );
+
+
+    await marketplace.grantRole(RESERVER_ROLE, addrReserver);
+
+
+    let period = 300 * 60; //period is seconds
+    let reservee = addrBuyer2;
+    await marketplace.reserve(nftAddress, tokenId, period, reservee, { from: addrReserver });
+
   });
 });

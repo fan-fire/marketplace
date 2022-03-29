@@ -19,9 +19,10 @@
  */
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
+const NonceTrackerSubprovider = require("web3-provider-engine/subproviders/nonce-tracker")
 //
 // const fs = require('fs');
-const mnemonic = 'satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi satoshi';
+const mnemonic = process.env.MNEUMONIC;
 
 module.exports = {
   /**
@@ -57,6 +58,22 @@ module.exports = {
     // },
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
+    polygon: {
+      // provider: () => new HDWalletProvider(mnemonic, process.env.POLYGON_NODE),
+      provider: function () {
+        var wallet = new HDWalletProvider(mnemonic, process.env.POLYGON_NODE)
+        var nonceTracker = new NonceTrackerSubprovider()
+        wallet.engine._providers.unshift(nonceTracker)
+        nonceTracker.setEngine(wallet.engine)
+        return wallet
+      },
+      network_id: 137, // Ropsten's id
+      gasPrice: 45 * 10 ** 9,
+      // gas: 4066000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2, // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
+    },
     mumbai: {
       provider: () =>
         new HDWalletProvider(
