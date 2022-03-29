@@ -839,7 +839,7 @@ contract('Marketplace', async (accounts) => {
     await expectRevert(marketplace.getListing(nftAddress, tokenId), 'NFT not listed');
   });
 
-  it.only('getReservedState resturns correct state', async () => {
+  it('getReservedState resturns correct state', async () => {
     let nftAddress = await erc721.address;
     price = web3.utils.toWei('1', 'ether');
     paymentToken = erc20.address;
