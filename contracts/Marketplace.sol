@@ -326,6 +326,21 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         );
     }
 
+    function getReservedState(address nftAddress, uint256 tokenId)
+        public
+        view
+        returns (address reservedFor, uint256 reservedUntil)
+    {
+        require(_isListed[nftAddress][tokenId], 'NFT not listed');
+
+        Listing memory listing = getListing(nftAddress, tokenId);
+
+        address reservedFor = listing.reservedFor;
+        uint256 reservedUntil = listing.reservedUntil;
+
+        return (reservedFor, reservedUntil);
+    }
+
     function unlist(address nftAddress, uint256 tokenId) public whenNotPaused {
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
         Listing memory listing = getListing(nftAddress, tokenId);

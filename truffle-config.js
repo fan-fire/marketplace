@@ -19,7 +19,8 @@
  */
 
 const HDWalletProvider = require('@truffle/hdwallet-provider');
-const NonceTrackerSubprovider = require("web3-provider-engine/subproviders/nonce-tracker")
+const NonceTrackerSubprovider = require('web3-provider-engine/subproviders/nonce-tracker');
+const { createProvider } = require('@rarible/trezor-provider');
 //
 // const fs = require('fs');
 const mnemonic = process.env.MNEUMONIC;
@@ -47,25 +48,50 @@ module.exports = {
       port: 8545, // Standard Ethereum port (default: none)
       network_id: '*', // Any network (default: none)
     },
-    // Another network with more advanced options...
-    // advanced: {
-    // port: 8777,             // Custom port
-    // network_id: 1342,       // Custom network
-    // gas: 8500000,           // Gas sent with each transaction (default: ~6700000)
-    // gasPrice: 20000000000,  // 20 gwei (in wei) (default: 100 gwei)
-    // from: <address>,        // Account to send txs from (default: accounts[0])
-    // websocket: true        // Enable EventEmitter interface for web3 (default: false)
-    // },
-    // Useful for deploying to a public network.
-    // NB: It's important to wrap the provider as a function.
+    // https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#examples
+    // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
+    // to understand path
     polygon: {
       // provider: () => new HDWalletProvider(mnemonic, process.env.POLYGON_NODE),
       provider: function () {
-        var wallet = new HDWalletProvider(mnemonic, process.env.POLYGON_NODE)
-        var nonceTracker = new NonceTrackerSubprovider()
-        wallet.engine._providers.unshift(nonceTracker)
-        nonceTracker.setEngine(wallet.engine)
-        return wallet
+        var wallet = new HDWalletProvider(mnemonic, process.env.POLYGON_NODE);
+        var nonceTracker = new NonceTrackerSubprovider();
+        wallet.engine._providers.unshift(nonceTracker);
+        nonceTracker.setEngine(wallet.engine);
+        return wallet;
+      },
+      network_id: 137, // Ropsten's id
+      gasPrice: 45 * 10 ** 9,
+      // gas: 4066000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2, // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
+    },
+    polygon_trezor: {
+      // provider: () => new HDWalletProvider(mnemonic, process.env.POLYGON_NODE),
+      provider: () => {
+        //websocket and http urls are supported
+        return createProvider({
+          url: process.env.POLYGON_NODE,
+          path: "m/44'/60'/0'/0/0",
+          chainId: 137,
+        });
+      },
+      network_id: 137, // Ropsten's id
+      gasPrice: 45 * 10 ** 9,
+      // gas: 4066000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2, // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
+    },
+    polygon: {
+      // provider: () => new HDWalletProvider(mnemonic, process.env.POLYGON_NODE),
+      provider: function () {
+        var wallet = new HDWalletProvider(mnemonic, process.env.POLYGON_NODE);
+        var nonceTracker = new NonceTrackerSubprovider();
+        wallet.engine._providers.unshift(nonceTracker);
+        nonceTracker.setEngine(wallet.engine);
+        return wallet;
       },
       network_id: 137, // Ropsten's id
       gasPrice: 45 * 10 ** 9,
@@ -75,11 +101,7 @@ module.exports = {
       skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
     },
     mumbai: {
-      provider: () =>
-        new HDWalletProvider(
-          mnemonic,
-          process.env.MUMBAI_NODE
-        ),
+      provider: () => new HDWalletProvider(mnemonic, process.env.MUMBAI_NODE),
       network_id: 80001, // Ropsten's id
       // gas: 5500000,        // Ropsten has a lower block limit than mainnet
       confirmations: 2, // # of confs to wait between deployments. (default: 0)
@@ -98,11 +120,11 @@ module.exports = {
   mocha: {
     reporter: 'eth-gas-reporter',
     reporterOptions: {
-      currency:"ZAR",
+      currency: 'ZAR',
       noColors: true,
       coinmarketcap: process.env.COINMARKETCAP_API_KEY,
-      token: "MATIC",
-      gasPriceApi: "https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice",
+      token: 'MATIC',
+      gasPriceApi: 'https://api.polygonscan.com/api?module=proxy&action=eth_gasPrice',
       excludeContracts: [
         'EmptyContractMock',
         'ERC1155Mock',
@@ -114,7 +136,7 @@ module.exports = {
         'ERC721WithoutOwnerMock',
         'Migrations',
         'MockThatOnlySupports165',
-        'MarketplaceMock'
+        'MarketplaceMock',
       ],
     },
   },

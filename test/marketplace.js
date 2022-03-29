@@ -838,4 +838,49 @@ contract('Marketplace', async (accounts) => {
 
     await expectRevert(marketplace.getListing(nftAddress, tokenId), 'NFT not listed');
   });
+
+  it('getReservedState resturns correct state', async () => {
+    let nftAddress = await erc721.address;
+    price = web3.utils.toWei('1', 'ether');
+    paymentToken = erc20.address;
+    tokenId = 1;
+
+    await erc721.setApprovalForAll(marketplace.address, true, {
+      from: addrSeller1,
+    });
+
+    let { l, lstPtr } = await listItem(
+      marketplace,
+      nftAddress,
+      tokenId,
+      price,
+      paymentToken,
+      addrSeller1
+    );
+
+    await marketplace.grantRole(RESERVER_ROLE, addrReserver);
+
+    let period = 300 * 60; //period is seconds
+    let reservee = addrBuyer2;
+    await marketplace.reserve(nftAddress, tokenId, period, reservee, { from: addrReserver });
+
+    let now = await time.latest();
+    let reservedState = await marketplace.getReservedState(nftAddress, tokenId);
+    let expectedReservedUntil = new BN(now).add(new BN(period));
+    let expectedReservedState = {
+      reservedFor: reservee,
+      reservedUntil: expectedReservedUntil.toString(),
+    };
+
+    reservedState = {
+      reservedFor: reservedState['reservedFor'],
+      reservedUntil: reservedState['reservedUntil'].toString(),
+    };
+
+    assert.deepStrictEqual(
+      reservedState,
+      expectedReservedState,
+      'reserved state should be correct'
+    );
+  });
 });
