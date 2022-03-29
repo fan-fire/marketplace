@@ -868,7 +868,7 @@ contract('Marketplace', async (accounts) => {
     let reservedState = await marketplace.getReservedState(nftAddress, tokenId);
     let expectedReservedUntil = new BN(now).add(new BN(period));
     let expectedReservedState = {
-      reservedFor: '0x911E06d05DC610E07C39D20cb240b20c0fF075B5',
+      reservedFor: reservee,
       reservedUntil: expectedReservedUntil.toString(),
     };
 
