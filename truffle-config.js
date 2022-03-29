@@ -51,6 +51,22 @@ module.exports = {
     // https://github.com/bitcoin/bips/blob/master/bip-0044.mediawiki#examples
     // https://github.com/satoshilabs/slips/blob/master/slip-0044.md
     // to understand path
+    polygon: {
+      // provider: () => new HDWalletProvider(mnemonic, process.env.POLYGON_NODE),
+      provider: function () {
+        var wallet = new HDWalletProvider(mnemonic, process.env.POLYGON_NODE);
+        var nonceTracker = new NonceTrackerSubprovider();
+        wallet.engine._providers.unshift(nonceTracker);
+        nonceTracker.setEngine(wallet.engine);
+        return wallet;
+      },
+      network_id: 137, // Ropsten's id
+      gasPrice: 45 * 10 ** 9,
+      // gas: 4066000,        // Ropsten has a lower block limit than mainnet
+      confirmations: 2, // # of confs to wait between deployments. (default: 0)
+      timeoutBlocks: 200, // # of blocks before a deployment times out  (minimum/default: 50)
+      skipDryRun: true, // Skip dry run before migrations? (default: false for public nets )
+    },
     polygon_trezor: {
       // provider: () => new HDWalletProvider(mnemonic, process.env.POLYGON_NODE),
       provider: () => {
