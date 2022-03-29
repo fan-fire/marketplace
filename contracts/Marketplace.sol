@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.11;
+pragma solidity 0.8.13;
 
 import '@openzeppelin/contracts/interfaces/IERC721.sol';
 import '@openzeppelin/contracts/interfaces/IERC20.sol';
@@ -329,6 +329,9 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
     function unlist(address nftAddress, uint256 tokenId) public whenNotPaused {
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
         Listing memory listing = getListing(nftAddress, tokenId);
+
+        // check reserving
+        require(block.timestamp >= listing.reservedUntil, 'NFT reserved');
 
         require(listing.seller == msg.sender, 'Only seller of NFT can unlist');
         assert(_unlist(nftAddress, tokenId));

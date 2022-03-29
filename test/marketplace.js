@@ -15,6 +15,7 @@ const {
 
 const Web3 = require('web3');
 const web3 = new Web3('http://localhost:8545');
+const RESERVER_ROLE = web3.utils.soliditySha3('RESERVER_ROLE');
 const fromWei = web3.utils.fromWei;
 const toWei = web3.utils.toWei;
 
@@ -45,6 +46,7 @@ contract('Marketplace', async (accounts) => {
 
   const addrSeller2 = accounts[4];
   const addrBuyer2 = accounts[5];
+  const addrReserver = accounts[6];
 
   // contracts
   let marketplace;
@@ -739,5 +741,101 @@ contract('Marketplace', async (accounts) => {
       listingStructToObject(listingAfterUnlist),
       'listing should not be unlisted'
     );
+  });
+
+  it("can't unlist if token is reserved", async () => {
+    let nftAddress = await erc721.address;
+    price = web3.utils.toWei('1', 'ether');
+    paymentToken = erc20.address;
+    tokenId = 1;
+
+    await erc721.setApprovalForAll(marketplace.address, true, {
+      from: addrSeller1,
+    });
+
+    let { l, lstPtr } = await listItem(
+      marketplace,
+      nftAddress,
+      tokenId,
+      price,
+      paymentToken,
+      addrSeller1
+    );
+
+    await marketplace.grantRole(RESERVER_ROLE, addrReserver);
+
+    let period = 300 * 60; //period is seconds
+    let reservee = addrBuyer2;
+    await marketplace.reserve(nftAddress, tokenId, period, reservee, { from: addrReserver });
+
+    let listing = await marketplace.getListing(nftAddress, tokenId);
+    listing = listingStructToObject(listing);
+
+    await expectRevert(
+      marketplace.unlist(nftAddress, tokenId, {
+        from: addrSeller1,
+      }),
+      'NFT reserved'
+    );
+  });
+
+  it('can unlist if token is not reserved', async () => {
+    let nftAddress = await erc721.address;
+    price = web3.utils.toWei('1', 'ether');
+    paymentToken = erc20.address;
+    tokenId = 1;
+
+    await erc721.setApprovalForAll(marketplace.address, true, {
+      from: addrSeller1,
+    });
+
+    let { l, lstPtr } = await listItem(
+      marketplace,
+      nftAddress,
+      tokenId,
+      price,
+      paymentToken,
+      addrSeller1
+    );
+
+    await marketplace.unlist(nftAddress, tokenId, {
+      from: addrSeller1,
+    });
+
+    await expectRevert(marketplace.getListing(nftAddress, tokenId), 'NFT not listed');
+  });
+
+  it('can unlist if reserved time has passed', async () => {
+    let nftAddress = await erc721.address;
+    price = web3.utils.toWei('1', 'ether');
+    paymentToken = erc20.address;
+    tokenId = 1;
+
+    await erc721.setApprovalForAll(marketplace.address, true, {
+      from: addrSeller1,
+    });
+
+    let { l, lstPtr } = await listItem(
+      marketplace,
+      nftAddress,
+      tokenId,
+      price,
+      paymentToken,
+      addrSeller1
+    );
+
+    await marketplace.grantRole(RESERVER_ROLE, addrReserver);
+
+    let period = 300 * 60; //period is seconds
+    let reservee = addrBuyer2;
+    await marketplace.reserve(nftAddress, tokenId, period, reservee, { from: addrReserver });
+
+    await time.increase(period);
+
+    await marketplace.unlist(nftAddress, tokenId, {
+      from: addrSeller1,
+    });
+
+    await expectRevert(marketplace.getListing(nftAddress, tokenId), 'NFT not listed');
   });
 });
