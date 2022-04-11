@@ -10,7 +10,7 @@ import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import {ERC165Checker} from '@openzeppelin/contracts/utils/introspection/ERC165Checker.sol';
 import './Storage.sol';
 
-contract Marketplace is Storage, Pausable, ReentrancyGuard {
+contract MarketplaceV2 is Storage, Pausable, ReentrancyGuard {
     using ERC165Checker for address;
     event ProtocolWalletChanged(address newProtocolWallet);
     event ProtocolFeeChanged(uint256 newProtocolFeeNumerator, uint256 newProtocolFeeDenominator);
@@ -82,15 +82,13 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
             require(IERC1155(nftAddress).balanceOf(msg.sender, tokenId) > 0, 'Sender not owner');
             require(
                 IERC1155(nftAddress).isApprovedForAll(msg.sender, address(this)),
-                'Marketplace not approved'
+                'Marketplace not approved for ERC1155'
             );
         }
         if (isERC721) {
             require(IERC721(nftAddress).ownerOf(tokenId) == msg.sender, 'Sender not owner');
-            require(
-                IERC721(nftAddress).isApprovedForAll(msg.sender, address(this)),
-                'Marketplace not approved'
-            );
+            address approvee = IERC721(nftAddress).getApproved(tokenId);
+            require(approvee == address(this), 'Marketplace not approved for ERC721');
         }
 
         // check price > 0
@@ -179,17 +177,19 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
     {
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
 
-        bool isSellerOwner = false;
-        bool isTokenStillApproved = false;
+        isSellerOwner = false;
+        isTokenStillApproved = false;
         Listing memory listing = _listings[_token2Ptr[nftAddress][tokenId]];
 
         // check that current owner is still the owner and the marketplace is still approved, otherwise unlist
         if (listing.nftType == NFTType.ERC721 || listing.nftType == NFTType.ERC721_2981) {
             isSellerOwner = IERC721(listing.nftAddress).ownerOf(listing.tokenId) == listing.seller;
-            isTokenStillApproved = IERC721(listing.nftAddress).isApprovedForAll(
+            address approvee = IERC721(nftAddress).getApproved(tokenId);
+            bool isApprovedForAll = IERC721(listing.nftAddress).isApprovedForAll(
                 listing.seller,
                 address(this)
             );
+            isTokenStillApproved = (approvee == address(this)) || isApprovedForAll;
         } else if (listing.nftType == NFTType.ERC1155 || listing.nftType == NFTType.ERC1155_2981) {
             isSellerOwner =
                 IERC1155(listing.nftAddress).balanceOf(listing.seller, listing.tokenId) > 0;
@@ -270,7 +270,7 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         require(
             //  allowance(address owner, address spender)
             IERC20(paymentToken).allowance(msg.sender, address(this)) >= price,
-            'Marketplace not approved'
+            'Marketplace not approved for ERC20'
         );
 
         // get royalties from mapping
@@ -335,8 +335,8 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
 
         Listing memory listing = getListing(nftAddress, tokenId);
 
-        address reservedFor = listing.reservedFor;
-        uint256 reservedUntil = listing.reservedUntil;
+        reservedFor = listing.reservedFor;
+        reservedUntil = listing.reservedUntil;
 
         return (reservedFor, reservedUntil);
     }
