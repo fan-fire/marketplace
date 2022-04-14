@@ -116,7 +116,7 @@ const main = async () => {
   const chainId = CHAIN_IDS.mainnet;
   const rpcUrl = getRpcUrl(chainId);
 
-  const privateKey = 'process.env.FANIE_PK';
+  const privateKey = process.env.FANIE_PK;
 
   const provider = new ethers.providers.JsonRpcProvider(rpcUrl);
   const wallet = new ethers.Wallet(privateKey, provider);
@@ -150,7 +150,7 @@ const main = async () => {
 
   let availableTimes = {
     // 0: '18:00:00', // R4000 Dry Sea Kelp Words (0)
-    1: '13:00:00'
+    2: '13:00:00'
   };
 
 
@@ -166,7 +166,8 @@ const main = async () => {
 
   // R1000 Japanese Tree Moss, Cotton X of Prague, Dry Pan Water Ripples
 
-  const now = '09:06:00';
+  // get hour, minute, second in 09:05:00 format
+  const now = String(new Date()).split(' ')[4]
   let reservePeriods = {};
   console.log(Object.keys(availableTimes));
   for (let i = 0; i < Object.keys(availableTimes).length; i++) {
