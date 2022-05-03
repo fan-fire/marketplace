@@ -47,6 +47,13 @@ echo '```' >>test_output.log
 echo '```' >>sizes_output.log
 echo '```' >>solhint_output.log
 
+echo "Test output"
+cat test_output.tmp
+echo "Sizes output"
+cat sizes_output.tmp
+echo "Solhint output"
+cat solhint_output.tmp
+
 rm -v test_output.tmp
 rm -v sizes_output.tmp
 rm -v solhint_output.tmp
