@@ -1,4 +1,6 @@
-const { ethers } = require('ethers');
+const { ethers } = require("ethers");
+console.log(ethers)
+// const BigNumber = require('bignumber.js');
 // const erc20Abi = require('erc-20-abi');
 
 // method that takes two times as '18:00' and '14:17' and calcualtes the seconds between them
@@ -20,8 +22,7 @@ const formatUnits = ethers.utils.formatUnits;
 const BigNumber = ethers.BigNumber;
 
 const MARKETPLACE_ABI = require('../../marketplace/build/contracts/Marketplace.json').abi;
-const FF721_ABI =
-  require('../../finnige-fanie/projects/202203280851_strijdom_mainnet_v2/truffle/build/contracts/FF721.json').abi;
+
 
 const MARKETPLACES_ADDRESSES = {
   137: '0xdfD1A784E63Ac5AC2E13E76B461C161839c3e3fD',
@@ -34,7 +35,8 @@ const getRpcUrl = (chainId) => {
     case 80001:
       return 'https://speedy-nodes-nyc.moralis.io/7ef9901b6b3e016589e433fb/polygon/mumbai';
     case 137:
-      return 'https://polygon-rpc.com';
+      // return 'https://polygon-rpc.com';
+      return 'https://speedy-nodes-nyc.moralis.io/7ef9901b6b3e016589e433fb/polygon/mainnet'
     // general case
     default:
       throw new Error(`Chain ID ${chainId} is not supported`);
@@ -150,7 +152,7 @@ const main = async () => {
 
   let availableTimes = {
     // 0: '18:00:00', // R4000 Dry Sea Kelp Words (0)
-    2: '13:00:00'
+    4: '13:00:00'
   };
 
 
@@ -161,7 +163,9 @@ const main = async () => {
 
   const nameLookups = {
     // 0: 'Forest Leaves',
-    1: "Dried Kelp As A Rectangle"
+    // 1: "Dried Kelp As A Rectangle"
+    // 3: "Fingerprint"
+    4: "Feather Reid Gradd"
   }
 
   // R1000 Japanese Tree Moss, Cotton X of Prague, Dry Pan Water Ripples
@@ -195,7 +199,7 @@ const main = async () => {
 
   allListings = allListings.filter((listing) => {
     console.log(listing.nftAddress)
-    return listing.nftAddress.toLowerCase() == nftAddress.toLowerCase() && 
+    return listing.nftAddress.toLowerCase() == nftAddress.toLowerCase() &&
       listing.reservedFor.toLowerCase() == reservee.toLowerCase()
   });
 
