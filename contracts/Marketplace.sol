@@ -57,6 +57,18 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
 
     event UnlistStale(address indexed nftAddress, uint256 indexed tokenId);
 
+    /**
+     * @dev List an NFT with `tokenId` deployed at `nftAddress` for `price` wei of an ERC20 token deployed to `paymentToken`
+     *
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     * - `price` must be greater than 0
+     * - `paymentToken` must be a contract that implements {IERC20}
+     *
+     * Emits a {Listed} event.
+     */
     function list(
         address nftAddress,
         uint256 tokenId,
@@ -172,6 +184,15 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         );
     }
 
+
+    /**
+     * @dev Retuns the isSellerOwner and isTokenstillApproved state of a listed NFT deployed at `nftAddress` with tokenId `tokenId`
+     *
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     */
     function status(address nftAddress, uint256 tokenId)
         public
         view
@@ -202,6 +223,18 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         return (isSellerOwner, isTokenStillApproved);
     }
 
+
+    /**
+     * @dev Allows anyone to unlist a token that has gone "Stale" 
+     * (i.e. either the lister is not the owner anymore or the owner has remove the approve all privelages of the marketplace)
+     *
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     *
+     * Emits a {UnlistStale} event.
+     */
     function unlistStale(address nftAddress, uint256 tokenId) public whenNotPaused {
         // check that the NFT is listed
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
@@ -222,6 +255,19 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         require(_unlist(nftAddress, tokenId), 'NFT could not be unlisted');
     }
 
+    /**
+     * @dev Allows a wallet with the RESERVER_ROLE to reserve a token (`nftAddress:tokenId`) for address `reservee` for `period` seconds.
+     * The max period that a token can be reseved is specified by MAX_RESERVE_PERIOD.
+     *
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     * - `period` must be a valid period in seconds
+     * - `reservee` must be a valid address
+     *
+     * Emits a {Reserved} event.
+     */
     function reserve(
         address nftAddress,
         uint256 tokenId,
@@ -240,6 +286,16 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         emit Reserved(nftAddress, tokenId, reservee, period, block.timestamp + period);
     }
 
+    /**
+     * @dev Buys a listed token (`nftAddress:tokenId`) for the `price` tokens of `paymentToken` it was listed for
+     *
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     *
+     * Emits a {Bought} event.
+     */
     function buy(address nftAddress, uint256 tokenId) public whenNotPaused nonReentrant {
         // check _isListed
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
@@ -326,6 +382,14 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         );
     }
 
+    /**
+     * @dev Returns the reserve status of a token (`nftAddress:tokenId`)
+     *
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     */
     function getReservedState(address nftAddress, uint256 tokenId)
         public
         view
@@ -341,6 +405,16 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         return (reservedFor, reservedUntil);
     }
 
+    /**
+     * @dev Unlist a listed token (`nftAddress:tokenId`) - only the lister of a token can unlist
+     *
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     *
+     * Emits a {Unlisted} event.
+     */
     function unlist(address nftAddress, uint256 tokenId) public whenNotPaused {
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
         Listing memory listing = getListing(nftAddress, tokenId);
@@ -352,6 +426,15 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         assert(_unlist(nftAddress, tokenId));
     }
 
+    /**
+     * @dev Internal method to unlist a token (`nftAddress:tokenId`)
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     *
+     * Emits a {UnlistStale} event.
+     */
     function _unlist(address nftAddress, uint256 tokenId) private returns (bool) {
         Listing memory listingToRemove = getListing(nftAddress, tokenId);
         uint256 listPtrToRemove = listingToRemove.listPtr;
@@ -373,6 +456,18 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         return true;
     }
 
+    /**
+     * @dev Internal method to set the royalties associated with a token (`nftAddress:tokenId`)
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     * - `royalty`
+     *      `.receiver` must be a valid address
+     *      `.royaltyAmount` must be greater than 0
+     *
+     * Emits a {RoyaltiesSet} event.
+     */
     function _setRoyalties(
         address nftAddress,
         uint256 tokenId,
@@ -382,6 +477,13 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         emit RoyaltiesSet(nftAddress, tokenId, royalty.receiver, royalty.royaltyAmount);
     }
 
+    /**
+     * @dev External method to look up the index in the listings array which corresponds to a token (`nftAddress:tokenId`)
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     */
     function getListingPointer(address nftAddress, uint256 tokenId)
         external
         view
@@ -391,8 +493,14 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         return _token2Ptr[nftAddress][tokenId];
     }
 
-    // We add these ourselves as there is no way to determine if a
-    // contract supports ERC20
+    /**
+     * @dev Method that only the owner of the Marketplace can call to add approved ERC20 address to be accepted as payment for listings 
+     * Requirements:
+     *
+     * - `paymentToken` must be a valid ERC20 address
+     *
+     * Emits a {PaymentTokenAdded} event.
+     */
     function addPaymentToken(address paymentToken) public onlyOwner {
         // check if payment token is in isPaymentToken
         require(!isPaymentToken(paymentToken), 'Payment token already added');
@@ -401,12 +509,29 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         emit PaymentTokenAdded(paymentToken);
     }
 
+    /**
+     * @dev Method that only the owner of the Marketplace can call to change the wallet to which the protocol fee is allocated
+     * Requirements:
+     *
+    * - `newProtocolWallet` must be a valid address
+     *
+     * Emits a {ProtocolWalletChanged} event.
+     */
     function changeProtocolWallet(address newProtocolWallet) public onlyOwner {
         require(newProtocolWallet != address(0), '0x00 not allowed');
         protocolWallet = newProtocolWallet;
         emit ProtocolWalletChanged(newProtocolWallet);
     }
 
+    /**
+     * @dev Method that only the owner of the Marketplace can call to change the percentage of the protocol fee that is allocated to the protocol wallet
+     * Requirements:
+     *
+     * - `newProtocolFeeNumerator` must be greater or equal to 0 
+     * - `newProtocolFeeDenominator` must be greater than 0 
+     *
+     * Emits a {ProtocolFeeChanged} event.
+     */
     function changeProtocolFee(uint256 newProtocolFeeNumerator, uint256 newProtocolFeeDenominator)
         public
         onlyOwner
@@ -417,34 +542,78 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         emit ProtocolFeeChanged(newProtocolFeeNumerator, newProtocolFeeDenominator);
     }
 
+    /**
+     * @dev External view method to check if a token (`nftAddress:tokenId`) is listed
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     */
     function isListed(address nftAddress, uint256 tokenId) external view returns (bool) {
         return _isListed[nftAddress][tokenId];
     }
 
+    /**
+     * @dev External view method to check if a ERC20 token is accepted as payment for listings
+     * Requirements:
+     *
+     * - `tokenAddress` must be a valid ERC20 address
+     */
     function isPaymentToken(address tokenAddress) public view returns (bool) {
         return _isPaymentToken[tokenAddress];
     }
 
+    /**
+     * @dev Public method that returns the amount of ERC20 located at `paymentToken` that `account` has available to be pulled from the marketplace.
+     * Requirements:
+     *
+     * - `account` must be a valid address
+     * - `paymentToken` must be a valid ERC20 address
+     */
     function getBalance(address paymentToken, address account) public view returns (uint256) {
         require(isPaymentToken(paymentToken), 'Unkown payment token');
         return _balances[paymentToken][account];
     }
 
+    /**
+     * @dev Helper public method to return a listing given the index in the listings array obtained using getListingPointer()
+     * Requirements:
+     *
+     * - `listPtr` must be a valid index in the listings array
+     */
     function getListingByPointer(uint256 listPtr) public view returns (Listing memory) {
         require(listPtr < _listings.length, 'listPtr out of bounds');
         return _listings[listPtr];
     }
 
+
+    /**
+     * @dev Helper public method to return a listing given the address of the token and the token ID (`nftAddress:tokenId`)
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     */
     function getListing(address nftAddress, uint256 tokenId) public view returns (Listing memory) {
         // check _isListed
         require(_isListed[nftAddress][tokenId], 'NFT not listed');
         return _listings[_token2Ptr[nftAddress][tokenId]];
     }
 
+    /**
+     * @dev Method that returns the entire listings array
+     */
     function getAllListings() external view returns (Listing[] memory) {
         return _listings;
     }
 
+    /**
+     * @dev Get royalties of a listed token (`nftAddress:tokenId`)
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     */
     function getRoyalties(address nftAddress, uint256 tokenId)
         public
         view
@@ -456,6 +625,18 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         return _royalties[nftAddress][tokenId];
     }
 
+    /**
+     * @dev Method that enables the seller of a token to set the royalites for a listing\
+     * If the NFT supports ERC2981 then the listing is updated with the new royalty specified in the ERC2981
+     * If the NFT does not support ERC2981 - the amount is set for the listing specified by `amount`
+     * Requirements:
+     *
+     * - `nftAddress` must be a contract that implements {IERC721}
+     * - `tokenId` must be a valid token ID for `nftAddress`
+     * - `amount` must be greater than 0, ignored if the NFT supports ERC2981
+     *
+     * Emits a {RoyaltiesSet} event.
+     */
     function updateRoyaltyAmount(
         address nftAddress,
         uint256 tokenId,
@@ -486,6 +667,13 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         _setRoyalties(nftAddress, tokenId, royalty);
     }
 
+
+    /**
+     * @dev Method to pull funds from the marketplace for msg.sender.
+     *
+     * - `paymentToken` must be a valid ERC20 address
+     * - `amount` must be greater than 0
+     */
     function pullFunds(address paymentToken, uint256 amount) public whenNotPaused nonReentrant {
         // Checks
         require(isPaymentToken(paymentToken), 'Payment token not supported');
@@ -501,11 +689,19 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         assert(_balances[paymentToken][msg.sender] == curBalance - amount);
         emit FundsWithdrawn(msg.sender, paymentToken, amount);
     }
-
+    
+    /**
+     * @dev Method to pause the marketplace.
+     *
+    */ 
     function pause() public onlyOwner {
         _pause();
     }
 
+    /**
+     * @dev Method to unpause the marketplace.
+     *
+    */ 
     function unpause() public onlyOwner {
         _unpause();
     }

@@ -13,6 +13,7 @@ else
 fi
 
 screen -d -S ganache -m ganache-cli -h 0.0.0.0 -p 8545 --networkId 4447
+echo "Running npm test"
 npm test >>test_output.tmp
 screen -S ganache -X quit
 npm run sizes >>sizes_output.tmp
@@ -21,11 +22,12 @@ npm run solhint:marketplace >>solhint_output.tmp
 
 # Cleaning up files
 # cat coverage_output.tmp | sed -n -e '/-----------------------/,$p' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" >>coverage_output.log
-cat test_output.tmp | sed -n -e '/----------------------------------------/,$p' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" >>test_output.log
+cat test_output.tmp >>test_output.log
 cat sizes_output.tmp | sed -n -e '/──────────────────────────────────────────────/,$p' | sed -r "s/\x1B\[([0-9]{1,3}(;[0-9]{1,2})?)?[mGK]//g" >>sizes_output.log
 cat solhint_output.tmp >>solhint_output.log
 
 echo 'Coverage Deactivated'>>coverage_output.log
+
 
 sed -i 's/                                              / /g' sizes_output.log
 sed -i 's/──────────────────────────────────────────────/─/g' sizes_output.log
