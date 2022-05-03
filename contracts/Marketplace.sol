@@ -184,7 +184,6 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         );
     }
 
-
     /**
      * @dev Retuns the isSellerOwner and isTokenstillApproved state of a listed NFT deployed at `nftAddress` with tokenId `tokenId`
      *
@@ -223,9 +222,8 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         return (isSellerOwner, isTokenStillApproved);
     }
 
-
     /**
-     * @dev Allows anyone to unlist a token that has gone "Stale" 
+     * @dev Allows anyone to unlist a token that has gone "Stale"
      * (i.e. either the lister is not the owner anymore or the owner has remove the approve all privelages of the marketplace)
      *
      * Requirements:
@@ -494,7 +492,7 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
     }
 
     /**
-     * @dev Method that only the owner of the Marketplace can call to add approved ERC20 address to be accepted as payment for listings 
+     * @dev Method that only the owner of the Marketplace can call to add approved ERC20 address to be accepted as payment for listings
      * Requirements:
      *
      * - `paymentToken` must be a valid ERC20 address
@@ -513,7 +511,7 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
      * @dev Method that only the owner of the Marketplace can call to change the wallet to which the protocol fee is allocated
      * Requirements:
      *
-    * - `newProtocolWallet` must be a valid address
+     * - `newProtocolWallet` must be a valid address
      *
      * Emits a {ProtocolWalletChanged} event.
      */
@@ -527,8 +525,8 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
      * @dev Method that only the owner of the Marketplace can call to change the percentage of the protocol fee that is allocated to the protocol wallet
      * Requirements:
      *
-     * - `newProtocolFeeNumerator` must be greater or equal to 0 
-     * - `newProtocolFeeDenominator` must be greater than 0 
+     * - `newProtocolFeeNumerator` must be greater or equal to 0
+     * - `newProtocolFeeDenominator` must be greater than 0
      *
      * Emits a {ProtocolFeeChanged} event.
      */
@@ -585,7 +583,6 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         require(listPtr < _listings.length, 'listPtr out of bounds');
         return _listings[listPtr];
     }
-
 
     /**
      * @dev Helper public method to return a listing given the address of the token and the token ID (`nftAddress:tokenId`)
@@ -667,7 +664,6 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         _setRoyalties(nftAddress, tokenId, royalty);
     }
 
-
     /**
      * @dev Method to pull funds from the marketplace for msg.sender.
      *
@@ -689,11 +685,11 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         assert(_balances[paymentToken][msg.sender] == curBalance - amount);
         emit FundsWithdrawn(msg.sender, paymentToken, amount);
     }
-    
+
     /**
      * @dev Method to pause the marketplace.
      *
-    */ 
+     */
     function pause() public onlyOwner {
         _pause();
     }
@@ -701,7 +697,7 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
     /**
      * @dev Method to unpause the marketplace.
      *
-    */ 
+     */
     function unpause() public onlyOwner {
         _unpause();
     }
