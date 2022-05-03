@@ -8,6 +8,7 @@ if [ "$CI" == "true" ]; then
     npm i truffle
     npm ci
     npm install -g ganache-cli
+    nvm use v16.14.2
 else
     echo "CI is not set"
 fi
