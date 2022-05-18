@@ -77,6 +77,8 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
     ) public whenNotPaused {
         // check that the NFT not listed already
         require(!_isListed[nftAddress][tokenId], 'NFT already listed');
+        // update _isListed first to avoid reentrancy 
+        _isListed[nftAddress][tokenId] = true;
         require(nftAddress.supportsERC165(), 'NFT not ERC165');
 
         bool isERC721 = nftAddress.supportsInterface(type(IERC721).interfaceId);
@@ -169,8 +171,6 @@ contract Marketplace is Storage, Pausable, ReentrancyGuard {
         // add to _listings
         _listings.push(listing);
 
-        // update _isListed
-        _isListed[nftAddress][tokenId] = true;
         emit Listed(
             listPtr,
             nftAddress,
