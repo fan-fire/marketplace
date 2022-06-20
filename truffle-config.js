@@ -23,7 +23,7 @@ const NonceTrackerSubprovider = require('web3-provider-engine/subproviders/nonce
 const { createProvider } = require('@rarible/trezor-provider');
 //
 // const fs = require('fs');
-const mnemonic = process.env.MNEUMONIC;
+const mnemonic = process.env.MNEMONIC;
 
 module.exports = {
   /**
