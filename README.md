@@ -1,5 +1,9 @@
 # Marketplace
 
+## Audit
+
+Audit available <a href='https://solidity.finance/audits/FanFireMarketplace/'>here</a>.
+
 ## Introduction
 
 A marketplace contract that can facilitate the listing and buying of ERC721 and ERC1155 tokens. The marketplace supports ERC2981 and calculates the royalties due to the receiver when an item is listed. If an ERC721 or ERC1155 does not support ERC2981, a low-level call is made to see if the NFT has an `owner` attribute, if so, this address is set to the receiver and this address can update the royalty amount after listing an NFT. 
